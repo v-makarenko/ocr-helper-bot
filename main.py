@@ -11,6 +11,9 @@ class RiskyObject:
     def __init__(self, name, last_checked=datetime.datetime.min):
         self.name = name
         self.last_checked = last_checked
+    def __repr__(self):
+        return self.name + ": " + str(self.last_checked)
+
 
 
 ACTION_ADD = 'Добавить'
@@ -33,6 +36,9 @@ keyboardStart = telebot.types.ReplyKeyboardMarkup(resize_keyboard=True)
 keyboardStart.row(ACTION_INIT_FILL, ACTION_NO_INIT_FILL)
 
 
+def print_db():
+    print(objects_map)
+
 @bot.message_handler(commands=['start'])
 def start_message(message):
     bot.send_message(message.chat.id, 'Привет, я помогу тебе не волноваться об утюге, плите или незакрытой двери - '
@@ -48,11 +54,14 @@ def on_init_fill_request(message):
     add_item(message.from_user.id, 'Выключить утюг')
     add_item(message.from_user.id, 'Закрыть дверь')
     bot.send_message(message.chat.id, 'Добавил!', reply_markup=keyboardMain)
+    print_db()
 
 
 def on_add_item_request(message):
     add_item(message.from_user.id, message.text)
     bot.send_message(message.chat.id, 'Добавлeно!', reply_markup=keyboardMain)
+    print_db()
+
 
 
 @bot.message_handler(func=lambda message: message.text == ACTION_ADD)
@@ -90,6 +99,7 @@ def on_do_action_request(message):
 def on_do_exact_action_request(message):
     refresh_item_time(message.from_user.id, message.text)
     bot.send_message(message.chat.id, 'Отлично!', reply_markup=keyboardMain)
+    print_db()
 
 
 @bot.message_handler(func=lambda message: message.text == ACTION_LIST)
@@ -109,7 +119,6 @@ def on_list_request(message):
 def on_back_to_menu_request(message):
     bot.send_message(message.chat.id, ACTION_MENU, reply_markup=keyboardMain)
 
-
 @bot.message_handler(func=lambda message: message.from_user.id in objects_map and message.text in [obj.name for obj in
                                                                                                    objects_map[
                                                                                                        message.from_user.id]])
@@ -117,6 +126,7 @@ def on_delete_item_request(message):
     stored_obj: RiskyObject = [obj for obj in objects_map[message.from_user.id] if obj.name == message.text][0]
     objects_map[message.from_user.id].remove(stored_obj)
     bot.send_message(message.chat.id, 'Удалено!', reply_markup=keyboardMain)
+    print_db()
 
 
 def add_item(user_id, item_name):
@@ -132,3 +142,4 @@ def refresh_item_time(user_id, item_name):
 
 
 bot.polling()
+
